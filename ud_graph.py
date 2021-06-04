@@ -1,7 +1,12 @@
-# Course: 
-# Author: 
-# Assignment: 
-# Description:
+# Course: CS 261
+# Author: Bryan Zierk
+# Assignment: Project 6 - Graph Implementation
+# Description: Implementation of an undirected graph which allows users to add/remove edges and vertices, get veritices
+# and edges, establish if there is a valid path, perform DFS/BFS, count connected components, and determine whether
+# or not there is are specific cycles.
+
+import heapq
+from collections import deque
 
 
 class UndirectedGraph:
@@ -42,14 +47,29 @@ class UndirectedGraph:
 
     def add_vertex(self, v: str) -> None:
         """
-        Add new vertex to the graph
+        Adds a new unique vertex to the graph. If a vertex with the same value already exists, method does nothing.
         """
-        
+        if v in self.adj_list:
+            return
+        else:
+            self.adj_list[v] = []
+
     def add_edge(self, u: str, v: str) -> None:
         """
         Add edge to the graph
         """
-        
+        if u == v:
+            return
+
+        for vertex in [u, v]:
+            if vertex not in self.adj_list:
+                self.add_vertex(vertex)
+
+        if v in self.adj_list[u]:
+            return
+
+        self.adj_list[u].append(v)
+        self.adj_list[v].append(u)
 
     def remove_edge(self, v: str, u: str) -> None:
         """
