@@ -44,90 +44,193 @@ class UndirectedGraph:
         return f'GRAPH: {{\n  {out}}}'
 
     # ------------------------------------------------------------------ #
+    def _is_adjacent(self, u: str, v: str):
+        """
+        Helper function which returns True of two vertices are adjacent, otherwise returns False
+        """
+        if u not in self.adj_list or v not in self.adj_list:
+            return False
+        elif u in self.adj_list[v]:
+            return True
+        else:
+            return False
+
+    def _get_degree(self, v: str):
+        """
+        Helper function which returns the degree of a vertex
+        """
+        return len(self.adj_list[v])
 
     def add_vertex(self, v: str) -> None:
         """
         Adds a new unique vertex to the graph. If a vertex with the same value already exists, method does nothing.
         """
-        if v in self.adj_list:
-            return
-        else:
-            self.adj_list[v] = []
+        self.adj_list.setdefault(v, [])
 
     def add_edge(self, u: str, v: str) -> None:
         """
         Add edge to the graph
         """
-        if u == v:
-            return
-
-        for vertex in [u, v]:
-            if vertex not in self.adj_list:
+        if u != v:
+            for vertex in [u, v]:
                 self.add_vertex(vertex)
-
-        if v in self.adj_list[u]:
-            return
-
-        self.adj_list[u].append(v)
-        self.adj_list[v].append(u)
+            if not self._is_adjacent(u, v):
+                self.adj_list[u].append(v)
+                self.adj_list[v].append(u)
+                self.adj_list[u].sort()
+                self.adj_list[v].sort()
 
     def remove_edge(self, v: str, u: str) -> None:
         """
         Remove edge from the graph
         """
-        
+        if not self._is_adjacent(u, v):
+            return
+
+        self.adj_list[u].remove(v)
+        self.adj_list[v].remove(u)
 
     def remove_vertex(self, v: str) -> None:
         """
         Remove vertex and all connected edges
         """
-        
+        if v not in self.adj_list:
+            return
+
+        for vertex in self.adj_list:
+            if v in self.adj_list[vertex]:
+                self.adj_list[vertex].remove(v)
+
+        self.adj_list.pop(v, None)
 
     def get_vertices(self) -> []:
         """
         Return list of vertices in the graph (any order)
         """
-       
+        vertex_list = []
+
+        for v in self.adj_list:
+            vertex_list.append(v)
+
+        return vertex_list
 
     def get_edges(self) -> []:
         """
         Return list of edges in the graph (any order)
         """
+        edge_list = []
+
+        for v in self.adj_list:
+            for u in self.adj_list[v]:
+                if (u, v) not in edge_list:
+                    edge_list.append((v, u))
+
+        return edge_list
         
 
     def is_valid_path(self, path: []) -> bool:
         """
         Return true if provided path is valid, False otherwise
         """
-       
+        if not path:
+            return True
+        else:
+            if len(path) == 1:
+                if path[0] not in self.adj_list:
+                    return False
+            u, v = 0, 1
+            while v <= len(path) - 1:
+                if not self._is_adjacent(path[u], path[v]):
+                    return False
+                else:
+                    u += 1
+                    v += 1
+
+            return True
 
     def dfs(self, v_start, v_end=None) -> []:
         """
         Return list of vertices visited during DFS search
         Vertices are picked in alphabetical order
         """
-       
+        if v_start not in self.adj_list:
+            return []
+
+        visited_vertices = []
+        dfs_stack = [v_start]
+        while len(dfs_stack) != 0:
+            v = dfs_stack.pop()
+            if v not in visited_vertices:
+                visited_vertices.append(v)
+                for vertex in reversed(self.adj_list[v]):
+                    if vertex not in visited_vertices:
+                        dfs_stack.append(vertex)
+            if v == v_end:
+                return visited_vertices
+
+        return visited_vertices
 
     def bfs(self, v_start, v_end=None) -> []:
         """
         Return list of vertices visited during BFS search
         Vertices are picked in alphabetical order
         """
+        if v_start not in self.adj_list:
+            return []
+
+        visited_vertices = []
+        bfs_queue = deque()
+        bfs_queue.append(v_start)
+        while len(bfs_queue) != 0:
+            v = bfs_queue.popleft()
+            if v not in visited_vertices:
+                visited_vertices.append(v)
+                for vertex in self.adj_list[v]:
+                    if vertex not in visited_vertices:
+                        bfs_queue.append(vertex)
+            if v == v_end:
+                return visited_vertices
+
+        return visited_vertices
         
 
     def count_connected_components(self):
         """
         Return number of connected componets in the graph
         """
-      
+        count = 0
+        counted_vertices = []
+        for v in self.adj_list:
+            if v not in counted_vertices:
+                counted_vertices = counted_vertices + self.dfs(v)
+                count += 1
+
+        return count
 
     def has_cycle(self):
         """
         Return True if graph contains a cycle, False otherwise
         """
-       
+        for v in self.adj_list:
+            visited_vertices = []
+            dfs_stack = [v]
+            par = v
+            while len(dfs_stack) != 0:
+                temp = par
+                par = v
+                v = dfs_stack.pop()
+                if v == par:
+                    par = temp
+                if v in visited_vertices and v != par:
+                    return True
 
-   
+                if v not in visited_vertices:
+                    visited_vertices.append(v)
+                    for vertex in reversed(self.adj_list[v]):
+                        if vertex not in visited_vertices:
+                            dfs_stack.append(vertex)
+
+        return False
 
 
 if __name__ == '__main__':

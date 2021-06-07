@@ -3,6 +3,11 @@
 # Assignment:
 # Description:
 
+
+import heapq
+from collections import deque
+
+
 class DirectedGraph:
     """
     Class to implement directed weighted graph
@@ -49,67 +54,187 @@ class DirectedGraph:
         return out
 
     # ------------------------------------------------------------------ #
+    def _valid_vertex(self, vertex):
+        """
+        Helper function which returns True if a vertex is valid, otherwise False.
+        """
+        if 0 <= vertex < self.v_count:
+            return True
+        else:
+            return False
 
     def add_vertex(self) -> int:
         """
-        TODO: Write this implementation
+        Adds a new vertex to the graph and returns the number of vertices in the graph.
         """
-        pass
+        self.v_count += 1
+        while len(self.adj_matrix) < self.v_count:
+            self.adj_matrix.append([])
+            for i in range(len(self.adj_matrix)):
+                while len(self.adj_matrix[i]) < self.v_count:
+                    self.adj_matrix[i].append(0)
+
+        return self.v_count
 
     def add_edge(self, src: int, dst: int, weight=1) -> None:
         """
-        TODO: Write this implementation
+        Adds an edge to the graph. If the edge already exists, the weight of the edge is updated.
         """
-        pass
+        for entry in [src, dst]:
+            if not self._valid_vertex(entry):
+                return
+
+        if weight < 0 or src == dst:
+            return
+
+        self.adj_matrix[src][dst] = weight
+
+
 
     def remove_edge(self, src: int, dst: int) -> None:
         """
-        TODO: Write this implementation
+        Removes an edge between provided source and destination vertices
         """
-        pass
+        for entry in [src, dst]:
+            if not self._valid_vertex(entry):
+                return
+
+        self.adj_matrix[src][dst] = 0
+
 
     def get_vertices(self) -> []:
         """
-        TODO: Write this implementation
+        Returns a list of vertices in the graph
         """
-        pass
+        vertex_list = []
+
+        for v in range(len(self.adj_matrix)):
+            vertex_list.append(v)
+
+        return vertex_list
 
     def get_edges(self) -> []:
         """
-        TODO: Write this implementation
+        Returns a list of edges as a tuple of incident vertices and weight of their connecting edge.
         """
-        pass
+        edge_list = []
+
+        for i in range(len(self.adj_matrix)):
+            for j in range(len(self.adj_matrix[i])):
+                if self.adj_matrix[i][j] != 0:
+                    edge_list.append((i, j, self.adj_matrix[i][j]))
+
+        return edge_list
 
     def is_valid_path(self, path: []) -> bool:
         """
-        TODO: Write this implementation
+        Determines whether a given path is valid and represents True if it is, otherwise returns False
         """
-        pass
+        if not path:
+            return True
+        elif len(path) == 1 and 0 <= path[0] < self.v_count:
+            return True
+        else:
+            src, dest = 0, 1
+            while dest < len(path):
+                if self.adj_matrix[path[src]][path[dest]] == 0:
+                    return False
+                src += 1
+                dest += 1
+        return True
 
     def dfs(self, v_start, v_end=None) -> []:
         """
-        TODO: Write this implementation
+        Performs a depth-first search of the graph and returns a list of vertices in the order they were visited.
+        If the starting vertex is not a valid vertex, returns an empty list. Accepts an optional end vertex parameter,
+        if provided, search will conclude when it explores the end vertex.
         """
-        pass
+        if not self._valid_vertex(v_start):
+            return []
+
+        visited_vertices = []
+        dfs_stack = [v_start]
+        while len(dfs_stack) != 0:
+            v = dfs_stack.pop()
+            if v not in visited_vertices:
+                visited_vertices.append(v)
+                for vertex in range(len(self.adj_matrix[v]) - 1, -1, -1):
+                    if self.adj_matrix[v][vertex] != 0:
+                        dfs_stack.append(vertex)
+            if v == v_end:
+                return visited_vertices
+
+        return visited_vertices
 
     def bfs(self, v_start, v_end=None) -> []:
         """
-        TODO: Write this implementation
+        Performs a breadth-first search the graph and returns a list of vertices in the order they were visited.
+        If the starting vertex is not a valid vertex, returns an empty list. Accepts an optional end vertex parameter,
+        if provided, search will conclude when it explores the end vertex.
         """
-        pass
+        if not self._valid_vertex(v_start):
+            return []
+
+        visited_vertices = []
+        bfs_queue = deque()
+        bfs_queue.append(v_start)
+        while len(bfs_queue) != 0:
+            v = bfs_queue.popleft()
+            if v not in visited_vertices:
+                visited_vertices.append(v)
+                for vertex in range(len(self.adj_matrix[v])):
+                    if self.adj_matrix[v][vertex] != 0 and vertex not in self.adj_matrix:
+                        bfs_queue.append(vertex)
+            if v == v_end:
+                return visited_vertices
+
+        return visited_vertices
 
     def has_cycle(self):
         """
-        TODO: Write this implementation
+        If a graph contains at least one cycle, returns True, otherwise False.
         """
-        pass
+        for v in range(len(self.adj_matrix)):
+            base_node = v
+            visited_vertices = []
+            dfs_stack = [v]
+            par = v
+            while len(dfs_stack) != 0:
+                temp = par
+                par = v
+                v = dfs_stack.pop()
+                if v == par:
+                    par = temp
+                if len(visited_vertices) > 1 and v == base_node or base_node in dfs_stack:
+                    return True
+                elif v not in visited_vertices:
+                    visited_vertices.append(v)
+                    for vertex in range(len(self.adj_matrix[v]) - 1, -1, -1):
+                        if self.adj_matrix[v][vertex] != 0 and vertex not in dfs_stack:
+                            dfs_stack.append(vertex)
+
+        return False
 
     def dijkstra(self, src: int) -> []:
         """
-        TODO: Write this implementation
+        Uses dijkstra's algorithm to determine the shortest path from a source vertex to each other vertex in the
+        graph. If a vertex is unreachable, "inf" is displayed.
         """
-        pass
+        if not self._valid_vertex(src):
+            return []
+        else:
+            visited_vertices = {}
+            nodes = [(0, src)]
+            while len(nodes) != 0:
+                d, v = heapq.heappop(nodes)
+                if v not in visited_vertices:
+                    visited_vertices[v] = d
+                    for vertex in range(len(self.adj_matrix[v])):
+                        if self.adj_matrix[v][vertex] != 0:
+                            d_i = d + self.adj_matrix[v][vertex]
+                            heapq.heappush(nodes, (d_i, vertex))
 
+            return visited_vertices
 
 if __name__ == '__main__':
 
@@ -173,6 +298,14 @@ if __name__ == '__main__':
         g.add_edge(src, dst)
         print(g.get_edges(), g.has_cycle(), sep='\n')
     print('\n', g)
+
+    print("\nGradeScope - method has_cycle() example 2")
+    print("---------------------------------------")
+    edges = [(0, 3, 1), (1, 2, 1), (1, 6, 1), (8, 11, 1), (9, 6, 1), (10, 0, 1), (10, 1, 1),
+             (9, 10, 1), (9, 11, 1), (11, 1, 1), (11, 7, 1), (12, 4, 1)]
+    g = DirectedGraph(edges)
+
+    print(g.has_cycle())
 
 
     print("\nPDF - dijkstra() example 1")
