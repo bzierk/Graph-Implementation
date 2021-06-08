@@ -233,8 +233,14 @@ class DirectedGraph:
                         if self.adj_matrix[v][vertex] != 0:
                             d_i = d + self.adj_matrix[v][vertex]
                             heapq.heappush(nodes, (d_i, vertex))
+            distances = []
+            for key in range(self.v_count):
+                if key not in visited_vertices:
+                    distances.append(float('inf'))
+                else:
+                    distances.append(visited_vertices[key])
 
-            return visited_vertices
+            return distances
 
 if __name__ == '__main__':
 
